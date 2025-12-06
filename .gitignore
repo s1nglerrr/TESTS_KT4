@@ -1,0 +1,17 @@
+## Игнорировать файлы и папки Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+## Игнорировать результаты сборки
+bin/
+obj/
+*.exe
+*.dll
+*.pdb
+
+## Игнорировать пакеты NuGet
+packages/
+*.nupkg
