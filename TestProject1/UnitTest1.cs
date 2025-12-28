@@ -27,15 +27,17 @@ namespace TestProject1
             _unavailableBook = new Book { Id = 1, Title = "Книга", Author = "Автор", IsAvailable = false };
 
             _studentRepoMock.Setup(x => x.GetStudentById(1)).Returns(_student);
+            _studentRepoMock.Setup(x => x.GetStudentById(It.Is<int>(id => id != 1))).Returns((Student)null);
+            
             _bookRepoMock.Setup(x => x.GetBookById(1)).Returns(_availableBook);
+            _bookRepoMock.Setup(x => x.GetBookById(2)).Returns(_unavailableBook);
+            _bookRepoMock.Setup(x => x.GetBookById(It.Is<int>(id => id != 1 && id != 2))).Returns((Book)null);
         }
 
         [Fact]
         public void BorrowBook_StudentNotFound_ReturnsUnsuccessfulResult()
         {
-            _studentRepoMock.Setup(x => x.GetStudentById(It.IsAny<int>())).Returns((Student)null);
-
-            var result = _service.BorrowBook(1, 1);
+            var result = _service.BorrowBook(0, 1);
 
             Assert.False(result.Success);
             Assert.Equal("Студент не найден", result.Message);
@@ -44,9 +46,7 @@ namespace TestProject1
         [Fact]
         public void BorrowBook_BookNotFound_ReturnsUnsuccessfulResult()
         {
-            _bookRepoMock.Setup(x => x.GetBookById(It.IsAny<int>())).Returns((Book)null);
-
-            var result = _service.BorrowBook(1, 1);
+            var result = _service.BorrowBook(1, 0);
 
             Assert.False(result.Success);
             Assert.Equal("Книга не найдена", result.Message);
@@ -55,9 +55,7 @@ namespace TestProject1
         [Fact]
         public void BorrowBook_BookNotAvailable_ReturnsUnsuccessfulResult()
         {
-            _bookRepoMock.Setup(x => x.GetBookById(1)).Returns(_unavailableBook);
-
-            var result = _service.BorrowBook(1, 1);
+            var result = _service.BorrowBook(1, 2);
 
             Assert.False(result.Success);
             Assert.Equal("Книга уже выдана", result.Message);
