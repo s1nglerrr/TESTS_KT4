@@ -14,7 +14,6 @@ namespace TestProject1
         private readonly Student _student;
         private readonly Book _availableBook;
         private readonly Book _unavailableBook;
-        private BorrowResult _result;
 
         public LibraryServiceTests()
         {
@@ -23,9 +22,12 @@ namespace TestProject1
             _notificationMock = new Mock<INotificationService>();
             _service = new LibraryService(_bookRepoMock.Object, _studentRepoMock.Object, _notificationMock.Object);
 
-            _student = new Student { Id = 1, Name = "Èâàí Èâàíîâ", Grade = 5 };
+            _student = new Student { Id = 1, Name = "Ð˜Ð²Ð°Ð½ Ð˜Ð²Ð°Ð½Ð¾Ð²", Grade = 5 };
             _availableBook = new Book { Id = 1, Title = "C#", Author = "MC.TIMUR3XXX", IsAvailable = true };
-            _unavailableBook = new Book { Id = 1, Title = "Êíèãà", Author = "Àâòîð", IsAvailable = false };
+            _unavailableBook = new Book { Id = 1, Title = "ÐšÐ½Ð¸Ð³Ð°", Author = "ÐÐ²Ñ‚Ð¾Ñ€", IsAvailable = false };
+
+            _studentRepoMock.Setup(x => x.GetStudentById(1)).Returns(_student);
+            _bookRepoMock.Setup(x => x.GetBookById(1)).Returns(_availableBook);
         }
 
         [Fact]
@@ -33,49 +35,44 @@ namespace TestProject1
         {
             _studentRepoMock.Setup(x => x.GetStudentById(It.IsAny<int>())).Returns((Student)null);
 
-            _result = _service.BorrowBook(1, 1);
+            var result = _service.BorrowBook(1, 1);
 
-            Assert.False(_result.Success);
-            Assert.Equal("Ñòóäåíò íå íàéäåí", _result.Message);
+            Assert.False(result.Success);
+            Assert.Equal("Ð¡Ñ‚ÑƒÐ´ÐµÐ½Ñ‚ Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½", result.Message);
         }
 
         [Fact]
         public void BorrowBook_BookNotFound_ReturnsUnsuccessfulResult()
         {
-            _studentRepoMock.Setup(x => x.GetStudentById(1)).Returns(_student);
             _bookRepoMock.Setup(x => x.GetBookById(It.IsAny<int>())).Returns((Book)null);
 
-            _result = _service.BorrowBook(1, 1);
+            var result = _service.BorrowBook(1, 1);
 
-            Assert.False(_result.Success);
-            Assert.Equal("Êíèãà íå íàéäåíà", _result.Message);
+            Assert.False(result.Success);
+            Assert.Equal("ÐšÐ½Ð¸Ð³Ð° Ð½Ðµ Ð½Ð°Ð¹Ð´ÐµÐ½Ð°", result.Message);
         }
 
         [Fact]
         public void BorrowBook_BookNotAvailable_ReturnsUnsuccessfulResult()
         {
-            _studentRepoMock.Setup(x => x.GetStudentById(1)).Returns(_student);
             _bookRepoMock.Setup(x => x.GetBookById(1)).Returns(_unavailableBook);
 
-            _result = _service.BorrowBook(1, 1);
+            var result = _service.BorrowBook(1, 1);
 
-            Assert.False(_result.Success);
-            Assert.Equal("Êíèãà óæå âûäàíà", _result.Message);
+            Assert.False(result.Success);
+            Assert.Equal("ÐšÐ½Ð¸Ð³Ð° ÑƒÐ¶Ðµ Ð²Ñ‹Ð´Ð°Ð½Ð°", result.Message);
         }
 
         [Fact]
         public void BorrowBook_SuccessfulBorrow_ReturnsSuccessResult()
         {
-            _studentRepoMock.Setup(x => x.GetStudentById(1)).Returns(_student);
-            _bookRepoMock.Setup(x => x.GetBookById(1)).Returns(_availableBook);
+            var result = _service.BorrowBook(1, 1);
 
-            _result = _service.BorrowBook(1, 1);
-
-            Assert.True(_result.Success);
-            Assert.Equal("Êíèãà 'C#' óñïåøíî âûäàíà ñòóäåíòó Èâàí Èâàíîâ", _result.Message);
+            Assert.True(result.Success);
+            Assert.Equal("ÐšÐ½Ð¸Ð³Ð° 'C#' ÑƒÑÐ¿ÐµÑˆÐ½Ð¾ Ð²Ñ‹Ð´Ð°Ð½Ð° ÑÑ‚ÑƒÐ´ÐµÐ½Ñ‚Ñƒ Ð˜Ð²Ð°Ð½ Ð˜Ð²Ð°Ð½Ð¾Ð²", result.Message);
             Assert.False(_availableBook.IsAvailable);
-            _bookRepoMock.Verify(x => x.UpdateBook(_availableBook));
-            _notificationMock.Verify(x => x.SendSuccessNotification("Èâàí Èâàíîâ", "C#"));
+            _bookRepoMock.Verify(x => x.UpdateBook(_availableBook), Times.Once);
+            _notificationMock.Verify(x => x.SendSuccessNotification("Ð˜Ð²Ð°Ð½ Ð˜Ð²Ð°Ð½Ð¾Ð²", "C#"), Times.Once);
         }
     }
 }
